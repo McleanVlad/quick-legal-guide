@@ -24,8 +24,8 @@ serve(async (req) => {
   }
 
   try {
-    const { issue } = await req.json();
-    console.log("Processing legal issue:", issue);
+    const { issue, conversationHistory = [], location } = await req.json();
+    console.log("Processing legal issue:", issue, "Location:", location);
 
     if (!issue || issue.trim().length === 0) {
       return new Response(
@@ -54,10 +54,11 @@ When someone shares their legal issue with you:
 - Share practical steps they can take, but in a conversational way - like you're talking to a friend over coffee
 - Point them toward helpful Jamaican government agencies or resources, with contact details if you know them
 - Remind them gently that while you're here to guide them, this is general information and not formal legal advice
+- If this is a follow-up question in an ongoing conversation, refer back to what was discussed earlier and build on that context
 
 Keep your tone warm and supportive. Use everyday language instead of legal jargon when possible. You can use emojis naturally if they fit the conversation, but don't force them.
 
-At the very end of your response, on a new line, add: "SEARCH_QUERY: [appropriate search term]" - for example "SEARCH_QUERY: employment lawyer Kingston Jamaica" or "SEARCH_QUERY: family law attorney Jamaica". This helps find the right legal professionals.
+At the very end of your response, on a new line, add: "SEARCH_QUERY: [appropriate search term]"${location ? ` - make sure to include "${location}" in the search query` : ''} - for example "SEARCH_QUERY: employment lawyer Kingston Jamaica" or "SEARCH_QUERY: family law attorney Jamaica". This helps find the right legal professionals.
 
 Aim for around 250 words - enough to be helpful without overwhelming them.`;
 
@@ -71,6 +72,7 @@ Aim for around 250 words - enough to be helpful without overwhelming them.`;
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
+          ...conversationHistory,
           { role: "user", content: issue },
         ],
       }),

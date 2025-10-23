@@ -24,12 +24,36 @@ serve(async (req) => {
   }
 
   try {
+    // Validate authentication (JWT is verified automatically by Supabase when verify_jwt = true)
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - Please log in" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { issue, conversationHistory = [], location } = await req.json();
     console.log("Processing legal issue:", issue, "Location:", location);
 
+    // Validate input length
     if (!issue || issue.trim().length === 0) {
       return new Response(
         JSON.stringify({ error: "Please provide a legal issue description" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (issue.length > 2000) {
+      return new Response(
+        JSON.stringify({ error: "Issue description too long. Please keep it under 2000 characters." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (conversationHistory.length > 20) {
+      return new Response(
+        JSON.stringify({ error: "Conversation history too long" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

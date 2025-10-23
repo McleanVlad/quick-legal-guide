@@ -3,9 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Send, Scale, AlertCircle, Star, Phone, Globe, MapPin, ExternalLink, MessageSquare } from "lucide-react";
+import { Loader2, Send, Scale, AlertCircle, Star, Phone, Globe, MapPin, ExternalLink, MessageSquare, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { z } from "zod";
+
+const issueSchema = z.string()
+  .trim()
+  .min(10, "Please provide more details (at least 10 characters)")
+  .max(2000, "Please keep your issue under 2000 characters");
 
 interface Recommendation {
   name: string;
@@ -51,9 +58,17 @@ export default function Index() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>("");
+  const navigate = useNavigate();
 
-  // Load conversation from URL or create new one
+  // Get user email and load conversation
   useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.email) {
+        setUserEmail(user.email);
+      }
+    });
+
     const urlParams = new URLSearchParams(window.location.search);
     const convId = urlParams.get('conversation');
     
@@ -89,20 +104,31 @@ export default function Index() {
   };
 
   const handleSubmit = async () => {
-    if (!issue.trim()) {
-      toast.error("Please describe your legal issue");
+    // Validate input
+    const validationResult = issueSchema.safeParse(issue);
+    if (!validationResult.success) {
+      toast.error(validationResult.error.errors[0].message);
       return;
     }
 
     setLoading(true);
 
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Authentication required");
+        navigate("/auth");
+        return;
+      }
+
       // Create new conversation if needed
       let currentConvId = conversationId;
       if (!currentConvId) {
         const { data: convData, error: convError } = await supabase
           .from('conversations')
           .insert({
+            user_id: user.id,
             title: issue.substring(0, 100),
             location: location || null
           })
@@ -204,11 +230,33 @@ export default function Index() {
     window.history.pushState({}, '', '/');
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-start p-4 md:p-6 bg-gradient-to-br from-background via-secondary/20 to-background">
       <div className="w-full max-w-3xl space-y-6 animate-in fade-in duration-700">
-        {/* Header */}
-        <div className="text-center space-y-3 pt-8">
+        {/* Header with User Info */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <User className="w-4 h-4" />
+            <span>{userEmail}</span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            className="border-2"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+
+        {/* Title */}
+        <div className="text-center space-y-3">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent shadow-elegant mb-4">
             <Scale className="w-8 h-8 text-primary-foreground" />
           </div>

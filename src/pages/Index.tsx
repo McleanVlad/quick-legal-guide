@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Send, Scale, AlertCircle, Star, Phone, Globe, MapPin, ExternalLink, MessageSquare, LogOut, User } from "lucide-react";
+import { Loader2, Send, Scale, AlertCircle, Star, Phone, Globe, MapPin, ExternalLink, MessageSquare, LogOut, User, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -244,15 +244,26 @@ export default function Index() {
             <User className="w-4 h-4" />
             <span>{userEmail}</span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            className="border-2"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/lawyers")}
+              className="border-2"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Find Lawyers
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="border-2"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* Title */}

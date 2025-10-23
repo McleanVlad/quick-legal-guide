@@ -41,6 +41,99 @@ export type Database = {
         }
         Relationships: []
       }
+      law_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      lawyer_specialties: {
+        Row: {
+          created_at: string
+          id: string
+          law_type_id: string
+          lawyer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          law_type_id: string
+          lawyer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          law_type_id?: string
+          lawyer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lawyer_specialties_law_type_id_fkey"
+            columns: ["law_type_id"]
+            isOneToOne: false
+            referencedRelation: "law_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lawyer_specialties_lawyer_id_fkey"
+            columns: ["lawyer_id"]
+            isOneToOne: false
+            referencedRelation: "lawyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lawyers: {
+        Row: {
+          bio: string | null
+          created_at: string
+          email: string
+          id: string
+          image_url: string | null
+          name: string
+          phone: string | null
+          updated_at: string
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          image_url?: string | null
+          name: string
+          phone?: string | null
+          updated_at?: string
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string

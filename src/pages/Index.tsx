@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Send, Scale, AlertCircle, Star, Phone, Globe, MapPin, ExternalLink, MessageSquare, LogOut, User, Users } from "lucide-react";
+import { Loader2, Send, Scale, AlertCircle, Star, Phone, Globe, MapPin, ExternalLink, MessageSquare, LogOut, User, Users, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import ConversationSidebar from "@/components/ConversationSidebar";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const issueSchema = z.string()
   .trim()
@@ -59,6 +61,7 @@ export default function Index() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [userEmail, setUserEmail] = useState<string>("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   // Get user email and load conversation
@@ -96,6 +99,9 @@ export default function Index() {
           created_at: msg.created_at
         })));
         setConversationId(convId);
+        
+        // Update URL
+        window.history.pushState({}, '', `?conversation=${convId}`);
       }
     } catch (err) {
       console.error("Error loading conversation:", err);
@@ -236,35 +242,69 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start p-4 md:p-6 bg-gradient-to-br from-background via-secondary/20 to-background">
-      <div className="w-full max-w-3xl space-y-6 animate-in fade-in duration-700">
-        {/* Header with User Info */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <User className="w-4 h-4" />
-            <span>{userEmail}</span>
+    <div className="min-h-screen flex">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <ConversationSidebar
+          currentConversationId={conversationId}
+          onSelectConversation={loadConversation}
+          onNewConversation={handleNewConversation}
+        />
+      </div>
+
+      {/* Mobile Sidebar */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="p-0 w-80">
+          <ConversationSidebar
+            currentConversationId={conversationId}
+            onSelectConversation={(id) => {
+              loadConversation(id);
+              setSidebarOpen(false);
+            }}
+            onNewConversation={() => {
+              handleNewConversation();
+              setSidebarOpen(false);
+            }}
+          />
+        </SheetContent>
+      </Sheet>
+
+      <div className="flex-1 flex flex-col items-center justify-start p-4 md:p-6 bg-gradient-to-br from-background via-secondary/20 to-background">
+        <div className="w-full max-w-3xl space-y-6 animate-in fade-in duration-700">
+          {/* Header with User Info */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <SheetTrigger asChild className="lg:hidden">
+                <Button variant="outline" size="icon" className="border-2">
+                  <Menu className="w-4 h-4" />
+                </Button>
+              </SheetTrigger>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">{userEmail}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/lawyers")}
+                className="border-2"
+              >
+                <Users className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Find Lawyers</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="border-2"
+              >
+                <LogOut className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/lawyers")}
-              className="border-2"
-            >
-              <Users className="w-4 h-4 mr-2" />
-              Find Lawyers
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="border-2"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
 
         {/* Title */}
         <div className="text-center space-y-3">
@@ -501,6 +541,7 @@ export default function Index() {
         {/* Footer */}
         <div className="text-center text-sm text-muted-foreground space-y-2 pb-8">
           <p>Empowering Jamaicans with accessible legal information</p>
+        </div>
         </div>
       </div>
     </div>

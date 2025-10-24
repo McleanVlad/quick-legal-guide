@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Mail, Phone, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -81,8 +82,37 @@ const Lawyers = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading lawyers directory...</p>
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto">
+          <Skeleton className="h-10 w-48 mb-4" />
+          <Skeleton className="h-12 w-96 mb-2" />
+          <Skeleton className="h-6 w-64 mb-8" />
+          
+          <div className="mb-8">
+            <Skeleton className="h-6 w-48 mb-3" />
+            <div className="flex flex-wrap gap-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-9 w-32" />
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-48 mb-2" />
+                  <Skeleton className="h-4 w-32" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

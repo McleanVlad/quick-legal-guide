@@ -162,9 +162,22 @@ const Lawyers = () => {
         {/* Lawyers Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredLawyers.length === 0 ? (
-            <p className="col-span-full text-center text-muted-foreground py-12">
-              No lawyers found for this practice area.
-            </p>
+            <div className="col-span-full text-center py-16">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-secondary mb-4">
+                <Mail className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No lawyers found</h3>
+              <p className="text-muted-foreground mb-4">
+                {selectedType 
+                  ? "No lawyers found for this practice area. Try selecting a different category."
+                  : "No lawyers available in the directory yet."}
+              </p>
+              {selectedType && (
+                <Button variant="outline" onClick={() => setSelectedType(null)}>
+                  View All Lawyers
+                </Button>
+              )}
+            </div>
           ) : (
             filteredLawyers.map((lawyer) => (
               <Card key={lawyer.id}>

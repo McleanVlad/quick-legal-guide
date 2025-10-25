@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Plus, Trash2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -18,7 +18,7 @@ import {
 
 interface Conversation {
   id: string;
-  title: string;
+  title: string | null;
   location: string | null;
   created_at: string;
   updated_at: string;
@@ -38,18 +38,37 @@ export default function ConversationSidebar({
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchConversations();
+    
+    // Subscribe to conversation changes
+    const channel = supabase
+      .channel('conversations-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations'
+        },
+        () => {
+          fetchConversations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchConversations = async () => {
     try {
       const { data, error } = await supabase
-        .from("conversations")
-        .select("*")
-        .order("updated_at", { ascending: false })
+        .from('conversations')
+        .select('*')
+        .order('updated_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
@@ -62,47 +81,48 @@ export default function ConversationSidebar({
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    
-    setDeleting(true);
+  const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("conversations")
+        .from('conversations')
         .delete()
-        .eq("id", deleteId);
+        .eq('id', id);
 
       if (error) throw error;
 
-      setConversations(prev => prev.filter(c => c.id !== deleteId));
       toast.success("Conversation deleted");
-
-      // If deleting current conversation, start new one
-      if (deleteId === currentConversationId) {
+      
+      // If we deleted the current conversation, start a new one
+      if (id === currentConversationId) {
         onNewConversation();
       }
+      
+      fetchConversations();
     } catch (error) {
       console.error("Error deleting conversation:", error);
       toast.error("Failed to delete conversation");
     } finally {
-      setDeleting(false);
       setDeleteId(null);
     }
   };
 
   if (loading) {
     return (
-      <div className="w-80 border-r border-border bg-card p-4 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div className="w-64 border-r bg-secondary/20 p-4">
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     );
   }
 
   return (
     <>
-      <div className="w-80 border-r border-border bg-card flex flex-col">
-        <div className="p-4 border-b border-border">
-          <Button onClick={onNewConversation} className="w-full">
+      <div className="w-64 border-r bg-secondary/20 flex flex-col">
+        <div className="p-4 border-b">
+          <Button
+            onClick={onNewConversation}
+            className="w-full"
+            size="sm"
+          >
             <Plus className="w-4 h-4 mr-2" />
             New Conversation
           </Button>
@@ -111,49 +131,42 @@ export default function ConversationSidebar({
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-1">
             {conversations.length === 0 ? (
-              <div className="text-center py-8 px-4">
-                <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground">
-                  No conversations yet. Start a new one!
-                </p>
-              </div>
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No conversations yet
+              </p>
             ) : (
               conversations.map((conv) => (
                 <div
                   key={conv.id}
-                  className={`group relative rounded-lg p-3 cursor-pointer transition-colors ${
-                    currentConversationId === conv.id
-                      ? "bg-primary/10 border-2 border-primary/20"
-                      : "hover:bg-secondary/50 border-2 border-transparent"
+                  className={`group flex items-center gap-2 p-2 rounded-lg hover:bg-secondary/50 cursor-pointer transition-colors ${
+                    currentConversationId === conv.id ? 'bg-secondary' : ''
                   }`}
-                  onClick={() => onSelectConversation(conv.id)}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
+                  <div
+                    className="flex-1 min-w-0"
+                    onClick={() => onSelectConversation(conv.id)}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <MessageSquare className="w-4 h-4 text-primary flex-shrink-0" />
                       <p className="text-sm font-medium truncate">
                         {conv.title || "Untitled conversation"}
                       </p>
-                      {conv.location && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {conv.location}
-                        </p>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
-                      </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 flex-shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteId(conv.id);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
+                    </p>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 h-7 w-7"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteId(conv.id);
+                    }}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
                 </div>
               ))
             )}
@@ -161,30 +174,22 @@ export default function ConversationSidebar({
         </ScrollArea>
       </div>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this conversation and all its messages.
-              This action cannot be undone.
+              Are you sure you want to delete this conversation? This action cannot be undone.
+              All messages in this conversation will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
-              disabled={deleting}
-              className="bg-destructive hover:bg-destructive/90"
+              onClick={() => deleteId && handleDelete(deleteId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

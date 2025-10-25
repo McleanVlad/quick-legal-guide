@@ -320,7 +320,7 @@ export default function Index() {
 
         {/* Conversation History */}
         {messages.length > 0 && (
-          <div className="space-y-4 mb-[400px]">
+          <div className="space-y-4 pb-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-primary" />
@@ -449,7 +449,7 @@ export default function Index() {
         )}
 
         {/* Input Card */}
-        <Card className="border-2 shadow-elegant hover:shadow-glow transition-all duration-300 sticky bottom-4 z-10 bg-background">
+        <Card className="border-2 shadow-elegant hover:shadow-glow transition-all duration-300 mt-6 sticky bottom-4 z-10 bg-background">
           <CardHeader className="pb-4">
             <CardTitle className="text-2xl text-primary">
               {messages.length > 0 ? "Ask a Follow-up Question" : "Describe Your Legal Issue"}

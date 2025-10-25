@@ -320,7 +320,7 @@ export default function Index() {
 
         {/* Conversation History */}
         {messages.length > 0 && (
-          <div className="space-y-4 pb-4">
+          <div className="space-y-4 pb-[500px]">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-primary" />

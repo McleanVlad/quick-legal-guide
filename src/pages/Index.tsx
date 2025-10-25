@@ -268,8 +268,8 @@ export default function Index() {
           />
         </SheetContent>
 
-        <div className="flex-1 flex flex-col items-center justify-start p-4 md:p-6 bg-gradient-to-br from-background via-secondary/20 to-background">
-          <div className="w-full max-w-3xl space-y-6 animate-in fade-in duration-700">
+        <div className="flex-1 flex flex-col items-center justify-start p-4 md:p-6 bg-gradient-to-br from-background via-secondary/20 to-background overflow-y-auto">
+          <div className="w-full max-w-3xl space-y-6 animate-in fade-in duration-700 pb-[550px]">
             {/* Header with User Info */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -320,7 +320,7 @@ export default function Index() {
 
         {/* Conversation History */}
         {messages.length > 0 && (
-          <div className="space-y-4 pb-[500px]">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-primary" />
@@ -449,7 +449,7 @@ export default function Index() {
         )}
 
         {/* Input Card */}
-        <Card className="border-2 shadow-elegant hover:shadow-glow transition-all duration-300 mt-6 sticky bottom-4 z-10 bg-background">
+        <Card className="border-2 shadow-elegant hover:shadow-glow transition-all duration-300 fixed bottom-4 left-1/2 -translate-x-1/2 w-full max-w-3xl z-50 bg-background mx-4">
           <CardHeader className="pb-4">
             <CardTitle className="text-2xl text-primary">
               {messages.length > 0 ? "Ask a Follow-up Question" : "Describe Your Legal Issue"}

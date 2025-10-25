@@ -242,18 +242,18 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
-        <ConversationSidebar
-          currentConversationId={conversationId}
-          onSelectConversation={loadConversation}
-          onNewConversation={handleNewConversation}
-        />
-      </div>
+    <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+      <div className="min-h-screen flex">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block">
+          <ConversationSidebar
+            currentConversationId={conversationId}
+            onSelectConversation={loadConversation}
+            onNewConversation={handleNewConversation}
+          />
+        </div>
 
-      {/* Mobile Sidebar */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        {/* Mobile Sidebar */}
         <SheetContent side="left" className="p-0 w-80">
           <ConversationSidebar
             currentConversationId={conversationId}
@@ -267,18 +267,17 @@ export default function Index() {
             }}
           />
         </SheetContent>
-      </Sheet>
 
-      <div className="flex-1 flex flex-col items-center justify-start p-4 md:p-6 bg-gradient-to-br from-background via-secondary/20 to-background">
-        <div className="w-full max-w-3xl space-y-6 animate-in fade-in duration-700">
-          {/* Header with User Info */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <SheetTrigger asChild className="lg:hidden">
-                <Button variant="outline" size="icon" className="border-2">
-                  <Menu className="w-4 h-4" />
-                </Button>
-              </SheetTrigger>
+        <div className="flex-1 flex flex-col items-center justify-start p-4 md:p-6 bg-gradient-to-br from-background via-secondary/20 to-background">
+          <div className="w-full max-w-3xl space-y-6 animate-in fade-in duration-700">
+            {/* Header with User Info */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <SheetTrigger asChild className="lg:hidden">
+                  <Button variant="outline" size="icon" className="border-2">
+                    <Menu className="w-4 h-4" />
+                  </Button>
+                </SheetTrigger>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <User className="w-4 h-4" />
                 <span className="hidden sm:inline">{userEmail}</span>
@@ -545,5 +544,6 @@ export default function Index() {
         </div>
       </div>
     </div>
+    </Sheet>
   );
 }

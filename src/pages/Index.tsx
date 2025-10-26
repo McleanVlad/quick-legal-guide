@@ -269,7 +269,7 @@ export default function Index() {
         </SheetContent>
 
         <div className="flex-1 flex flex-col items-center justify-start p-4 md:p-6 bg-gradient-to-br from-background via-secondary/20 to-background overflow-y-auto">
-          <div className="w-full max-w-3xl space-y-6 animate-in fade-in duration-700 pb-[550px]">
+          <div className="w-full max-w-3xl space-y-6 animate-in fade-in duration-700">
             {/* Header with User Info */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -317,6 +317,95 @@ export default function Index() {
             Get instant guidance on your legal issues. Understand your rights and the right path forward.
           </p>
         </div>
+
+        {/* Input Card */}
+        <Card className="border-2 shadow-elegant hover:shadow-glow transition-all duration-300 bg-background">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-2xl text-primary">
+              {messages.length > 0 ? "Ask a Follow-up Question" : "Describe Your Legal Issue"}
+            </CardTitle>
+            <CardDescription className="text-base">
+              {messages.length > 0 
+                ? "Continue the conversation with more questions about your legal matter"
+                : "Tell us what's happening, and we'll guide you on the right steps to take"
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Location Selector */}
+            {!conversationId && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Location (Optional)
+                </label>
+                <Select value={location} onValueChange={setLocation}>
+                  <SelectTrigger className="border-2">
+                    <SelectValue placeholder="Select your parish..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {JAMAICAN_PARISHES.map((parish) => (
+                      <SelectItem key={parish} value={parish}>
+                        {parish}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Selecting a location helps us find legal professionals near you
+                </p>
+              </div>
+            )}
+
+            <Textarea
+              placeholder={messages.length > 0 
+                ? "Ask your follow-up question here..."
+                : "For example: My landlord refuses to return my deposit after I moved out last month. I gave proper notice and left the apartment in good condition..."
+              }
+              value={issue}
+              onChange={(e) => setIssue(e.target.value)}
+              className="min-h-[120px] text-base resize-none border-2 focus:border-primary transition-colors"
+              disabled={loading}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !loading && issue.trim()) {
+                  handleSubmit();
+                }
+              }}
+            />
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={handleSubmit}
+                disabled={loading || !issue.trim()}
+                size="lg"
+                className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-md"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                    {messages.length > 0 ? "Getting Answer..." : "Analyzing Your Issue..."}
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-5 w-5 mr-2" />
+                    {messages.length > 0 ? "Send Question" : "Get Legal Guidance"}
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center">
+              Press Ctrl+Enter (or Cmd+Enter on Mac) to submit
+            </p>
+
+            {/* Disclaimer */}
+            <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg border border-border">
+              <AlertCircle className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">Important:</strong> Legal Assist provides general information and guidance based on Jamaican law. This is not a substitute for professional legal advice. For specific legal matters, please consult with a qualified attorney.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Conversation History */}
         {messages.length > 0 && (
@@ -447,95 +536,6 @@ export default function Index() {
             </div>
           </div>
         )}
-
-        {/* Input Card */}
-        <Card className="border-2 shadow-elegant hover:shadow-glow transition-all duration-300 fixed bottom-4 left-1/2 -translate-x-1/2 w-full max-w-3xl z-50 bg-background mx-4">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-2xl text-primary">
-              {messages.length > 0 ? "Ask a Follow-up Question" : "Describe Your Legal Issue"}
-            </CardTitle>
-            <CardDescription className="text-base">
-              {messages.length > 0 
-                ? "Continue the conversation with more questions about your legal matter"
-                : "Tell us what's happening, and we'll guide you on the right steps to take"
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Location Selector */}
-            {!conversationId && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Location (Optional)
-                </label>
-                <Select value={location} onValueChange={setLocation}>
-                  <SelectTrigger className="border-2">
-                    <SelectValue placeholder="Select your parish..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {JAMAICAN_PARISHES.map((parish) => (
-                      <SelectItem key={parish} value={parish}>
-                        {parish}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Selecting a location helps us find legal professionals near you
-                </p>
-              </div>
-            )}
-
-            <Textarea
-              placeholder={messages.length > 0 
-                ? "Ask your follow-up question here..."
-                : "For example: My landlord refuses to return my deposit after I moved out last month. I gave proper notice and left the apartment in good condition..."
-              }
-              value={issue}
-              onChange={(e) => setIssue(e.target.value)}
-              className="min-h-[120px] text-base resize-none border-2 focus:border-primary transition-colors"
-              disabled={loading}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !loading && issue.trim()) {
-                  handleSubmit();
-                }
-              }}
-            />
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                onClick={handleSubmit}
-                disabled={loading || !issue.trim()}
-                size="lg"
-                className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-md"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="animate-spin h-5 w-5 mr-2" />
-                    {messages.length > 0 ? "Getting Answer..." : "Analyzing Your Issue..."}
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-5 w-5 mr-2" />
-                    {messages.length > 0 ? "Send Question" : "Get Legal Guidance"}
-                  </>
-                )}
-              </Button>
-            </div>
-
-            <p className="text-xs text-muted-foreground text-center">
-              Press Ctrl+Enter (or Cmd+Enter on Mac) to submit
-            </p>
-
-            {/* Disclaimer */}
-            <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg border border-border">
-              <AlertCircle className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                <strong className="text-foreground">Important:</strong> Legal Assist provides general information and guidance based on Jamaican law. This is not a substitute for professional legal advice. For specific legal matters, please consult with a qualified attorney.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Footer */}
         <div className="text-center text-sm text-muted-foreground space-y-2 pb-8">

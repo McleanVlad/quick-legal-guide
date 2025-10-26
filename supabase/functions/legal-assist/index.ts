@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,8 +34,64 @@ serve(async (req) => {
       );
     }
 
+    // Extract user ID from JWT token
+    const token = authHeader.replace("Bearer ", "");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Decode JWT to get user ID
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = user.id;
+
+    // Check rate limiting - allow 10 requests per hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: rateLimitData, error: rateLimitError } = await supabase
+      .from('api_rate_limits')
+      .select('request_count, window_start')
+      .eq('user_id', userId)
+      .eq('endpoint', 'legal-assist')
+      .gte('window_start', oneHourAgo)
+      .single();
+
+    if (!rateLimitError && rateLimitData) {
+      if (rateLimitData.request_count >= 10) {
+        console.log(`Rate limit exceeded for user ${userId}`);
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded. Please try again in an hour. Maximum 10 requests per hour allowed." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Increment request count
+      await supabase
+        .from('api_rate_limits')
+        .update({ request_count: rateLimitData.request_count + 1 })
+        .eq('user_id', userId)
+        .eq('endpoint', 'legal-assist')
+        .gte('window_start', oneHourAgo);
+    } else {
+      // Create new rate limit record
+      await supabase
+        .from('api_rate_limits')
+        .insert({
+          user_id: userId,
+          endpoint: 'legal-assist',
+          request_count: 1,
+          window_start: new Date().toISOString()
+        });
+    }
+
     const { issue, conversationHistory = [], location } = await req.json();
-    console.log("Processing legal issue:", issue, "Location:", location);
+    // Sanitized logging - only log metadata, not sensitive content
+    console.log(`Processing legal issue - length: ${issue.length}, has location: ${!!location}, user: ${userId}`);
 
     // Validate input length
     if (!issue || issue.trim().length === 0) {
@@ -145,7 +202,8 @@ Aim for around 250 words - enough to be helpful without overwhelming them.`;
       advice = advice.replace(/SEARCH_QUERY:.+/i, "").trim();
     }
 
-    console.log("Search query for businesses:", searchQuery);
+    // Sanitized logging - only log length, not the actual query
+    console.log(`Generated search query - length: ${searchQuery.length}`);
 
     // Step 3: Search Google Places for legal professionals
     let recommendations: GooglePlaceResult[] = [];

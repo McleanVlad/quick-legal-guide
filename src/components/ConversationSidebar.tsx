@@ -74,7 +74,6 @@ export default function ConversationSidebar({
       if (error) throw error;
       setConversations(data || []);
     } catch (error) {
-      console.error("Error fetching conversations:", error);
       toast.error("Failed to load conversations");
     } finally {
       setLoading(false);
@@ -99,7 +98,6 @@ export default function ConversationSidebar({
       
       fetchConversations();
     } catch (error) {
-      console.error("Error deleting conversation:", error);
       toast.error("Failed to delete conversation");
     } finally {
       setDeleteId(null);

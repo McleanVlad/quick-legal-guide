@@ -67,7 +67,6 @@ const Lawyers = () => {
 
       setLawyers(transformedLawyers);
     } catch (error) {
-      console.error("Error fetching lawyers:", error);
       toast.error("Failed to load lawyers directory");
     } finally {
       setLoading(false);

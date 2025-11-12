@@ -104,7 +104,6 @@ export default function Index() {
         window.history.pushState({}, '', `?conversation=${convId}`);
       }
     } catch (err) {
-      console.error("Error loading conversation:", err);
       toast.error("Failed to load conversation");
     }
   };
@@ -188,7 +187,6 @@ export default function Index() {
       });
 
       if (error) {
-        console.error("Function error:", error);
         toast.error("Failed to get legal guidance. Please try again.");
         return;
       }
@@ -221,7 +219,6 @@ export default function Index() {
         toast.error("No advice received. Please try again.");
       }
     } catch (err) {
-      console.error("Error:", err);
       toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

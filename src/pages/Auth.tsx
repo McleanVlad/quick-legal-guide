@@ -76,7 +76,6 @@ export default function Auth() {
         navigate("/");
       }
     } catch (err) {
-      console.error("Auth error:", err);
       toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

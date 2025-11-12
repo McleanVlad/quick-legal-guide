@@ -135,7 +135,7 @@ export default function Index() {
           .from('conversations')
           .insert({
             user_id: user.id,
-            title: issue.substring(0, 100),
+            title: issue.length > 50 ? issue.substring(0, 50).trim() + '...' : issue.trim(),
             location: location || null
           })
           .select()
